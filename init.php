@@ -1,8 +1,5 @@
 <?php
 
-// test modification
-// another test (develop branch)
-
 include dirname(__FILE__) . '/core/Saffyre.php';			// Include "Saffyre" class to start with
 
 Saffyre::includePath(dirname(__FILE__));
