@@ -39,7 +39,7 @@ class Util {
 		$args = func_get_args();
 		return $args[array_rand($args)];
 	}
-	
+
 	/**
 	 * Recursively searches $haystack for $needle, including nested arrays.
 	 */
@@ -99,8 +99,9 @@ class Util {
 		foreach($array as $key => $value)
 			if(array_search($value, $array, true) != $key)
 				unset($array[$key]);
+		return $array;
 	}
-	
+
 	/**
 	 * Returns the value of static variable $class::$property
 	 */
@@ -150,6 +151,64 @@ class Util {
 		if(count($array) == 1) return reset($array);
 		$parts = array_chunk($array, count($array) - 1);
 		return implode($glue, $parts[0]) . $last . reset($parts[1]);
+	}
+
+
+	public static function pick($obj, $properties)
+	{
+		if(!$obj instanceof stdClass && !is_array($obj)) throw new Exception('Invalid object type!');
+		if(!is_array($properties))
+		{
+			$properties = func_get_args();
+			array_shift($properties);
+		}
+		if(is_array($obj))
+		{
+			$new = array();
+			foreach($properties as $key)
+				$new[$key] = $obj[$key];
+		}
+		else
+		{
+			$new = new stdClass();
+			foreach($properties as $key)
+				if(isset($obj->$key)) $new->$key = $obj->$key;
+		}
+		return $new;
+	}
+
+	public static function omit($obj, $properties)
+	{
+		if(!$obj instanceof stdClass && !is_array($obj)) throw new Exception('Invalid object type!');
+		if(!is_array($properties))
+		{
+			$properties = func_get_args();
+			array_shift($properties);
+		}
+		if(is_array($obj))
+		{
+			$new = array();
+			foreach($obj as $key => $value)
+				if(!in_array($key, $properties))
+					$new[$key] = $value;
+		}
+		else
+		{
+			$class = get_class($obj);
+			$new = new $class;
+			foreach($obj as $key => $value)
+				if(!in_array($key, $properties))
+					$new->$key = $value;
+		}
+		return $new;
+	}
+
+	public static function extend(&$obj1, $obj2)
+	{
+		if(!((is_array($obj1) || is_object($obj1)) && (is_array($obj2) || is_object($obj2)))) return $obj1;
+		foreach($obj2 as $key => $value)
+			$obj1->$key = $obj2->$key;
+		return $obj1;
 	}
 
 }

@@ -72,6 +72,11 @@ class DB {
 
 class DBConn {
 
+	private $user;
+	private $password;
+	private $host;
+	private $database;
+	
 	private $conn;
 	private $connString;
 	private $tables = array();
@@ -80,20 +85,20 @@ class DBConn {
 	{
 		$this->connString = $string;
 
-		$user = substr($string, 0, strpos($string, ':'));
+		$this->user = substr($string, 0, strpos($string, ':'));
 		$atPos = strrpos($string, '@');
 		$slashPos = strrpos($string, '/');
-		$password = substr($string, $pwStart = strlen($user)+1, $atPos - $pwStart);
-		$host = substr($string, $atPos + 1, $slashPos - $atPos - 1);
-		$database = substr($string, $slashPos + 1);
+		$this->password = substr($string, $pwStart = strlen($this->user)+1, $atPos - $pwStart);
+		$this->host = substr($string, $atPos + 1, $slashPos - $atPos - 1);
+		$this->database = substr($string, $slashPos + 1);
 
-		$this->conn = @mysql_connect($host, $user, $password);
+		$this->conn = @mysql_connect($this->host, $this->user, $this->password);
 		if(!$this->conn) throw new Exception('Could not connect to database: ' . mysql_error() . " ($string)");
 
 		mysql_query("SET NAMES 'utf8'", $this->conn);
 		mysql_query("SET CHARACTER SET 'utf8'", $this->conn);
 
-		if(!@mysql_select_db($database)) throw new Exception('Error while selecting database: ' . mysql_error());
+		if(!@mysql_select_db($this->database)) throw new Exception('Error while selecting database: ' . mysql_error());
 	}
 
 	public static function create($string = null)
@@ -105,6 +110,11 @@ class DBConn {
 		return DB::$conns[$string] = $db;
 	}
 
+	public function getUser() { return $this->user; }
+	public function getPassword() { return $this->password; }
+	public function getHost() { return $this->host; }
+	public function getDatabase() { return $this->database; }
+	
 	/*
 	 * @return DBResult
 	 */

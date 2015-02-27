@@ -1,26 +1,26 @@
 <?php
 
 /**
- * A utility wrapper class for accessing $_GET, $_POST, and $_COOKIE data. 
- * This class will clean up all effects of magic quotes if they are enabled. 
- * 
+ * A utility wrapper class for accessing $_GET, $_POST, and $_COOKIE data.
+ * This class will clean up all effects of magic quotes if they are enabled.
+ *
  * // Get individual values:
  * $getName = Q::get('name');
  * $postString = Q::post('string');
  * $cookieSession = Q::cookie('session');
- * 
+ *
  * // As an object of name value pairs:
  * $g = Q::get();
  * echo "Your name is {$g->name}";
  * String::htmlEntities($g); // Now all the values are safe for printing in html!
- * 
+ *
  * // Set a cookie:
  * Q::cookie('name', 'value', 3600, '/', 'website.com', false);
- * 
+ *
  * @author Alex
  *
  */
-class Q 
+class Q
 {
 	public static $cookie_domain;
 
@@ -30,12 +30,12 @@ class Q
 	private static $_POST;
 	private static $_COOKIE;
 
-	public function __get($name) 
+	public function __get($name)
 	{
 		return isset($this->$name) ? $this->$name : null;
 	}
 
-	public function __construct($method = null) 
+	public function __construct($method = null)
 	{
 		$methods = func_get_args();
 		if(!$methods) $methods = array('cookie', 'post', 'get');
@@ -52,12 +52,17 @@ class Q
 				if(!isset($this->$key)) $this->$key = self::clean($value);
 		}
 	}
-	
+
 	public function __isEmpty()
 	{
 		return !(array)$this;
 	}
-	
+
+	public static function type()
+	{
+		return strtoupper($_SERVER['REQUEST_METHOD']);
+	}
+
 	public static function clean($value)
 	{
 		if(!isset(self::$sy)) self::$sy = (bool)ini_get('magic_quotes_sybase');
@@ -90,7 +95,7 @@ class Q
 		if(isset(self::$_POST[$name])) return self::$_POST[$name];
 		return self::$_POST[$name] = isset($_POST[$name]) ? self::clean($_POST[$name]) : null;
 	}
-	
+
 	public static function request($name = null)
 	{
 		if($name === null) return new Q('post', 'get');
@@ -100,7 +105,7 @@ class Q
 		self::$_GET[$name] = isset($_GET[$name]) ? self::clean($_GET[$name]) : null;
 		return self::$_POST[$name] ? self::$_POST[$name] : self::$_GET[$name];
 	}
-	
+
 	public static function cookie($name, $value = null, $expires = null, $path = null, $domain = null, $secure = null)
 	{
 		if(func_num_args() == 1)
@@ -127,7 +132,7 @@ class Q
 		}
 	}
 
-	private static function setCookie($name, $value, $expires, $path, $domain, $secure) 
+	private static function setCookie($name, $value, $expires, $path, $domain, $secure)
 	{
 		setcookie($name, $value, $expires === null ? null : time() + $expires, $path ? $path : '/', $usedDomain = ($domain ? $domain : '.' . (self::$cookie_domain ? self::$cookie_domain : $_SERVER['HTTP_HOST'])), $secure);
 	}
@@ -149,7 +154,7 @@ class Q
 	/**
 	 * Rebuilds a query string based on this object.
 	 * You may leave out keys by specifying them in the $except array.
-	 * 
+	 *
 	 * @param array $except
 	 * @return string
 	 */

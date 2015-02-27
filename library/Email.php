@@ -1,4 +1,4 @@
-<? 
+<?
 
 class Email
 {
@@ -10,7 +10,7 @@ class Email
 	// Send a debug copy (with extra information) to this address, regardless of debug mode
 	public static $debug_all = false;
 
-	// Turn debugging on for all emails by specifying an array of email addresses. 
+	// Turn debugging on for all emails by specifying an array of email addresses.
 	// When debugging is on, only the addresses specified in this array will be able to receive original emails.
 	public static $debug_to = false;
 
@@ -18,7 +18,7 @@ class Email
 	public static $smtp_port;
 	public static $smtp_user;
 	public static $smtp_password;
-	
+
 	public static function create()
 	{
 		$s = new SoxMail();
@@ -26,18 +26,18 @@ class Email
 		$s->header('Reply-To', self::$default_replyTo);
 		return $s;
 	}
-	
-	
+
+
 	public static function send(SoxMail $mail, $debug = false)
 	{
-		// $to, $cc, $bcc & $all contain the addres that will actually be sent to (filtered by debug settings).
+		// $to, $cc, $bcc & $all contain the address that will actually be sent to (filtered by debug settings).
 		// $origTo, $origCC, $origBCC, & $origAll contain the original addressees before filtering.
-		
+
 		$to = $origTo = $mail->to();
 		$cc = $origCC = $mail->cc();
 		$bcc = $origBCC = $mail->bcc();
 		$origAll = $to + $cc + $bcc;
-		
+
 		if(self::$debug_to) {
 			foreach($to as $email => $name)
 				if(!in_array($email, self::$debug_to)) unset($to[$email]);
@@ -46,12 +46,12 @@ class Email
 			foreach($bcc as $email => $name)
 				if(!in_array($email, self::$debug_to)) unset($bcc[$email]);
 		}
-		
+
 		$all = $to + $cc + $bcc;
 		$origSubject = $mail->subject();
-		
+
 		$mail->tls(true, self::$smtp_user, self::$smtp_password);
-		
+
 		if($all)
 		{
 			$mail->to($to, false);
@@ -61,7 +61,7 @@ class Email
 			$c->debug($debug);
 			$mail->send($c, self::$default_helo);
 		}
-	
+
 		if(self::$debug_all)
 		{
 			$origTo = SoxMail::emailArrayToString($origTo);
@@ -72,7 +72,7 @@ class Email
 			$mail->cc('', false);
 			$mail->bcc('', false);
 			$mail->subject("Email sent to: $origTo");
-			
+
 			$header = "To: $origTo\n".
 						"CC: $origCC\n".
 						"BCC: $origBCC\n".

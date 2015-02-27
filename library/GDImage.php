@@ -312,6 +312,24 @@ class GDImage {
 		$this->image = $flipped;
 	}
 
+	/**
+	 * Expand the image to fill a box of the given width height, as large as possible without overflowing the box.
+	 * The image will not be reduced to fit inside the box.
+	 */
+	public function fillSize($w, $h)
+	{
+		$wOld = $this->width();
+		$hOld = $this->height();
+		if($wOld > $w || $hOld > $h) return;
+
+		$wRatio = $w / $wOld;
+		$hRatio = $h / $hOld;
+
+		$ratio = min($wRatio, $hRatio);
+
+		$this->resize($wOld * $ratio, $hOld * $ratio);
+	}
+
 	public function fill($color, $x, $y) {
 		if($color = $this->allocateColor($color))
 			imagefill($this->image, $x, $y, $color);

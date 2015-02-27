@@ -22,16 +22,18 @@ class Cache
 {
 	public static $dir;
 
-	public static function save($label, $data, $expires = null)
+	public static function save($label, $data, $expires = null, $compress = true)
 	{
 		$label = urlencode($label);
 		$dir = rtrim(self::$dir, "/");
-		if (is_object($data))
+		if (is_object($data) || is_array($data))
 		{
 			if (method_exists($data, "__toString")) $data = call_user_func(array($data, '__toString'));
 			else $data = serialize($data);
 		}
-		if ((bool)file_put_contents("$dir/$label", (string)gzcompress($data)))
+		$str = (string)gzcompress($data);
+		if(strlen($str) > $data) $str = $data;
+		if ((bool)file_put_contents("$dir/$label", $str))
 		{
 			if ($expires) $expires = time() + (int)$expires;
 			else $expires = time() + (60 * 60 * 24 * 365 * 10);
@@ -41,14 +43,17 @@ class Cache
 		else throw new Exception("Could not cache file.", 0);
 	}
 
-	public static function get($label)
+	public static function get($label, $decompress = true, $unserialize = true)
 	{
 		$label = urlencode($label);
 		$dir = rtrim(self::$dir, "/");
-		if (file_exists("$dir/$label"))
+		if (file_exists("$dir/$label") && fileatime("$dir/$label") > time())
 		{
-			$file = gzuncompress(file_get_contents("$dir/$label"));
-			if (fileatime("$dir/$label") > time()) return $file;
+			$str = file_get_contents("$dir/$label");
+			$file = $decompress ? @gzuncompress($str) : $str;
+			$data = $file ? $file : $str;
+			$obj = $unserialize ? @unserialize($data) : $data;
+			return $obj ? $obj : $data;
 		}
 	}
 

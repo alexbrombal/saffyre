@@ -35,7 +35,7 @@ abstract class UserModel extends Model {
 		return self::$loggedIn = $user;
 	}
 
-	final public function logIn($expire = null)
+	public function logIn($expire = null)
 	{
 		if(!$expire) $expire = self::$expire;
 		$this->setCookie($expire);

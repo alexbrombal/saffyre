@@ -75,15 +75,15 @@ abstract class Model implements dbInsertable {
 
 		if(!self::isFieldCallable($name))
 			throw new Exception("'$name' is not a callable field of ".get_class($this));
-		
-		if(!isset(self::$dbInsertables[get_class($this)][$this->getId()])) 
+
+		if(!isset(self::$dbInsertables[get_class($this)][$this->getId()]))
 			self::$dbInsertables[get_class($this)][$this->getId()] = array();
-		
+
 		$dbInsertables = &self::$dbInsertables[get_class($this)][$this->getId()];
-		
+
 		if($this->$name instanceof dbInsertable) return $dbInsertables[$name] = $this->$name;
 		if(!$this->$name) return $dbInsertables[$name] = null;
-		
+
 		if(isset($dbInsertables[$name])) return $dbInsertables[$name];
 
 		$class = String::upTo('_', $name);
@@ -190,23 +190,23 @@ abstract class Model implements dbInsertable {
 		$desc = $db->describe($table);
 
 		$origValues = $this->getOrigValues();
-		
+
 		foreach($this as $key => $value)
 		{
 			if($key == 'id' || !isset($desc->$key)) continue;
-			
+
 			if($value instanceof dbInsertable)
 				$value = $value->__dbValue();
-			
+
 			elseif(is_object($value) && method_exists($value, "__toString"))
 				$value = call_user_func(array($this, '__toString'));
-			
+
 			elseif(is_array($value) || is_object($value))
 				$value = serialize($value);
-			
+
 			if($value === null && $desc->$key->Null == 'NO') $value = '';
 			if($value !== null) {
-				if($desc->$key->Type == 'int') $value = (int)$value;
+				if(in_array($desc->$key->Type, array('int', 'tinyint'))) $value = (int)$value;
 				else $value = (string)$value;
 			}
 
@@ -223,7 +223,7 @@ abstract class Model implements dbInsertable {
 				$sql[] = $db->prepare("`$key` = '%s'", $value);
 		}
 
-		if($force || $sql) 
+		if($force || $sql)
 		{
 			$sql = join(', ', $sql);
 			if($sql) $sql = "SET $sql";
@@ -282,7 +282,7 @@ abstract class Model implements dbInsertable {
 		$class = get_class($this);
 		if(!$table = Model::getTable($this))
 			throw new Exception("Could not save $class, table does not exist");
-		
+
 		$id = DB::execute("INSERT INTO `$table` SELECT * FROM `$table` WHERE id = {$this->getId()}");
 		if($id) return Model::getFromSQL("SELECT * FROM `$table` WHERE id = {$id}");
 	}

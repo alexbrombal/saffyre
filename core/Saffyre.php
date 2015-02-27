@@ -2,7 +2,7 @@
 
 /**
  * The main Saffyre class. This class is really just a namespace for core Saffyre methods. You cannot instantiate this class.
- * 
+ *
  * @package Saffyre
  * @author Alex Brombal
  * @copyright 2011
@@ -33,7 +33,7 @@ class Saffyre {
 
 	/**
 	 * Return the request URI of this execution.
-	 * 
+	 *
 	 * @uses Q
 	 * @param boolean $query True to add the query string to the return value, false to omit.
 	 * @param array $exceptQuery An array of parameter names that should not be included in the query string.
@@ -48,7 +48,7 @@ class Saffyre {
 
 	/**
 	 * Return an item from the path of this execution, or an array containing the path.
-	 * 
+	 *
 	 * @param int $index The index to return, or null to return the entire array.
 	 * @return string|array The path component requested by $index, or the entire path as an array.
 	 * @uses Util
@@ -90,13 +90,14 @@ class Saffyre {
 	 * @param string $url The url to redirect to.
 	 * @param array $headers Additional headers to set (each array value should be an entire header line).
 	 */
-	public static function redirect($url, $headers = array())
+	public static function redirect($url, $headers = array(), $temporary = false)
 	{
+		array_unshift($headers, 'HTTP/1.1 ' . ($temporary ? '302 Moved Temporarily' : '301 Moved Permanently'));
 		if(preg_match('/^https?:\/\//', $url))
 			header("Location: $url");
 		else
 			header('Location: ' . rtrim(URL_BASE, '/') . '/' . ltrim($url, '/'));
-		foreach($headers as $header) header($header);
+		if(is_array($headers)) foreach($headers as $header) header($header);
 		exit;
 	}
 
@@ -106,9 +107,9 @@ class Saffyre {
 	 * @param int $number The error status code to send.
 	 * @todo Add all error codes to this list.
 	 */
-	public static function httpError($number) 
+	public static function httpError($number)
 	{
-		switch($number) 
+		switch($number)
 		{
 			case 400:
 				header("HTTP/1.1 400 Bad Request");
@@ -133,22 +134,33 @@ class Saffyre {
     public static function isAjax() {
         return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
     }
-    
+
     /**
      * Indicates whether the request was secure.
-     * 
+     *
      * @return boolean
      */
     public static function isSSL()
     {
     	return !empty($_SERVER['HTTPS']);
     }
-    
+
     public static function forceSSL()
     {
     	$url = URL_BASE . ltrim(Saffyre::request(), '/');
     	$ssl = preg_replace('/^http:/', 'https:', $url);
     	if($ssl != $url) Saffyre::redirect($ssl);
+    }
+
+
+    public static function isPost()
+    {
+    	return $_SERVER['REQUEST_METHOD'] == 'POST';
+    }
+
+    public static function isGet()
+    {
+    	return $_SERVER['REQUEST_METHOD'] == 'GET';
     }
 
     /**
@@ -162,15 +174,15 @@ class Saffyre {
 
 	/**
 	 * Requires HTTP Authentication. Execution dies after authentication fails.
-	 * 
+	 *
 	 * @param string $message Message displayed to the user
 	 * @param array $creds An associative array of username => sha1(password) pairs.
-	 * @param callback $failure A callback method that is called if authentication fails. 
+	 * @param callback $failure A callback method that is called if authentication fails.
 	 */
 	public static function requireHTTPAuth($message, $creds, $failure = null)
 	{
 		//if(isset($_COOKIE['auth'])) return true;
-		
+
 		if(isset($_SERVER['PHP_AUTH_USER']))
 		{
 			if(isset($creds[$_SERVER['PHP_AUTH_USER']]) && sha1($_SERVER['PHP_AUTH_PW']) == $creds[$_SERVER['PHP_AUTH_USER']])
@@ -178,7 +190,7 @@ class Saffyre {
 				Q::cookie('auth', 1, 10000000);
 				return true;
 			}
-			else 
+			else
 			{
 				header("WWW-Authenticate: Basic realm=\"$message\"", null, 401);
 				if($failure) call_user_func($failure);
@@ -191,8 +203,15 @@ class Saffyre {
 			die('Forbidden');
 		}
 	}
-	
-	
+
+
+	public static function forceTrailingSlash($slash = true)
+	{
+		$lastChar = substr(Saffyre::request(false), -1);
+		if(!$_POST && strlen(Saffyre::request(false)) > 1 && ($slash ? $lastChar != '/' : $lastChar == '/'))
+			Saffyre::redirect(rtrim(Saffyre::request(false), '/') . ($slash ? '/' : '') . ($_SERVER['QUERY_STRING'] ? '?'.$_SERVER['QUERY_STRING'] : ''));
+	}
+
 	/**
 	 * The main execution method for the Saffyre framework. The method should only be invoked ONCE and there is no guarantee that
 	 * it will return execution (many methods and controllers will die or exit). This method starts an output buffer.
