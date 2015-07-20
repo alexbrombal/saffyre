@@ -24,17 +24,17 @@ final class Controller {
 		$path = Saffyre::cleanPath($path);
 		self::removeExtension($path);
 		$this->path = $path;
-		if(!$path) $path = array('default');
+		if(!$path) $path = array('_default');
 
 		do {
 			$file = implode(DIRECTORY_SEPARATOR, $path);
 			if(is_file(self::$dir . "$file.php") && $this->file = $path) break;
-			if(is_file(self::$dir . $file . DIRECTORY_SEPARATOR . 'default.php') && $this->file = array_merge($path, array('default'))) break;
+			if(is_file(self::$dir . $file . DIRECTORY_SEPARATOR . '_default.php') && $this->file = array_merge($path, array('_default'))) break;
 			array_unshift($this->args, $slug = array_pop($path));
 		} while($slug);
 
 		if(!$this->file) {
-			throw new Exception('Invalid controller path. Maybe you don\'t have a default.php file.');
+			throw new Exception('Invalid controller path. Maybe you don\'t have a _default.php file.');
 		}
 
 		if($args !== null) $this->args = Saffyre::cleanPath($args);
@@ -68,10 +68,10 @@ final class Controller {
 		$args = $this->path;
 		while(true)
 		{
-			if(is_file(rtrim(self::$dir . implode(DIRECTORY_SEPARATOR, $file), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'global.php'))
+			if(is_file(rtrim(self::$dir . implode(DIRECTORY_SEPARATOR, $file), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_global.php'))
 			{
 				$controller = new Controller(false);
-				$controller->file = array_merge($file, array('global'));
+				$controller->file = array_merge($file, array('_global'));
 				$controller->path = $this->path;
 				$controller->args = $args;
 				$controller->mainRequest = true;
