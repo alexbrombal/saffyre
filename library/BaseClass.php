@@ -16,9 +16,11 @@ class BaseClass extends stdClass {
 	}
 
 	public static function create($obj) {
-		$bc = new BaseClass();
-		$bc->__import($obj);
-		return $bc;
+		return new BaseClass($obj);
+	}
+
+	public function __construct($values = null, $onlyProperties = false) {
+		$this->__import($values, $onlyProperties);
 	}
 
 	public function __call($name, $arguments) {}
@@ -40,9 +42,13 @@ class BaseClass extends stdClass {
 			if(array_search($key, $except) === false) unset($this->$key);
 	}
 
-	public function __import($obj) {
-		foreach($obj as $key => $value)
-			$this->$key = (is_object($value) ? clone $value : $value);
+	public function __import($obj, $onlyProperties = false) {
+		if (is_string($obj))
+			$obj = json_decode($obj);
+		if ($obj)
+			foreach($obj as $key => $value)
+				if (!$onlyProperties || property_exists($this, $key))
+					$this->$key = (is_object($value) && method_exists($value, '__clone') ? clone $value : $value);
 	}
 
 	public function __compare(BaseClass $compare, $except = array(), $debug = false) {

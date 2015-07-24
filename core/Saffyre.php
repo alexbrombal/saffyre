@@ -31,40 +31,6 @@ class Saffyre {
 		}
 	}
 
-	/**
-	 * Return the request URI of this execution.
-	 *
-	 * @uses Q
-	 * @param boolean $query True to add the query string to the return value, false to omit.
-	 * @param array $exceptQuery An array of parameter names that should not be included in the query string.
-	 * @return string The request URI of this execution.
-	 */
-	public static function request($query = false, $exceptQuery = array())
-	{
-		if($query) $q = Q::get()->buildQuery($exceptQuery);
-		return '/' . ltrim(preg_replace('/'.preg_quote(URL_PATH, '/').'/', '', self::$path, 1), '/') .
-					($query && !empty($q) ? "?$q" : '');
-	}
-
-	/**
-	 * Return an item from the path of this execution, or an array containing the path.
-	 *
-	 * @param int $index The index to return, or null to return the entire array.
-	 * @return string|array The path component requested by $index, or the entire path as an array.
-	 * @uses Util
-	 */
-	public static function path($index = null)
-	{
-		$path = trim(URL_PATH, '/');
-		$uri = preg_replace("(^/?$path|\?.*$)", '', self::$path);
-		$path = self::cleanpath($uri);
-		Util::array_clean($path);
-		if($index === null) return $path;
-		else {
-			if(isset($path[$index])) return $path[$index];
-			else return null;
-		}
-	}
 
 	/**
 	 * Cleans $path (an array of path components or a string path) by removing empty values and url-decoding the values.
@@ -107,22 +73,24 @@ class Saffyre {
 	 * @param int $number The error status code to send.
 	 * @todo Add all error codes to this list.
 	 */
-	public static function httpError($number)
+	public static function responseStatus($code)
 	{
-		switch($number)
+		switch($code)
 		{
 			case 400:
 				header("HTTP/1.1 400 Bad Request");
-				return;
+				break;
 			case 404:
 				header("HTTP/1.1 404 Not Found");
-				return;
+				break;
 			case 403:
 				header("HTTP/1.1 403 Forbidden");
-				return;
+				break;
 			case 401:
 				header("HTTP/1.1 401 Unauthorized");
-				return;
+				break;
+			default:
+				header("HTTP/1.1 " . $code);
 		}
 	}
 
@@ -152,15 +120,9 @@ class Saffyre {
     	if($ssl != $url) Saffyre::redirect($ssl);
     }
 
-
-    public static function isPost()
+    public static function requestBody()
     {
-    	return $_SERVER['REQUEST_METHOD'] == 'POST';
-    }
-
-    public static function isGet()
-    {
-    	return $_SERVER['REQUEST_METHOD'] == 'GET';
+        return file_get_contents('php://input');
     }
 
     /**
@@ -224,7 +186,10 @@ class Saffyre {
 	{
 		ob_start();
 
-		self::$path = preg_replace('/\?.*$/', '', $path ? self::cleanPath($path, true) : $_SERVER['REQUEST_URI']);
+		if (!$path)
+			$path = $_SERVER['REQUEST_URI'];
+
+		self::$path = self::cleanPath($path);
 
 		$required = array("URL_BASE", "URL_PATH");
 		$undefined = array();
@@ -238,24 +203,30 @@ class Saffyre {
 			define('ENCODING', 'UTF-8');
 
 		header('Content-type: text/html; charset='.ENCODING);
-		header("X-Powered-By: Saffyre Framework 1.0", true);
+		header("X-Powered-By: Saffyre Framework 2.0", true);
 
-		include_once dirname(__FILE__) . '/Controller.php';
-		$controller = new Controller(self::$path);
-		$controller->mainRequest = true;
+		//include_once dirname(__FILE__) . '/Controller.php';
+		$controller = new Controller(true, self::$path);
+		$controller->isMainRequest = true;
+		$response = $controller->execute(true);
 
-		$response = $controller->executeGlobal();
+		if (!$controller->resultWasOutput)
+		{
+			if (is_object($response) || is_array($response))
+			{
+				if (method_exists($response, '__toString'))
+					echo $response->__toString();
+				else
+					echo json_encode($response);
+			}
+			else
+				echo $response;
+		}
 
-		if($response instanceof Onion)
-			echo $response;
-		elseif($response !== false)
-			$response = $controller->execute();
+		if ($controller->status != null)
+			Saffyre::responseStatus($controller->status);
 
-		if($response instanceof Onion)
-			echo $response;
-
-		if($return) ob_get_clean();
+		if($return) return ob_get_clean();
 		else ob_flush();
 	}
-
 }

@@ -20,7 +20,7 @@
  * @author Alex
  *
  */
-class Q
+class Q extends BaseClass
 {
 	public static $cookie_domain;
 
@@ -35,8 +35,30 @@ class Q
 		return isset($this->$name) ? $this->$name : null;
 	}
 
-	public function __construct($method = null)
+	/**
+	 * Rebuilds a query string based on this object.
+	 * You may leave out keys by specifying them in the $except array.
+	 *
+	 * @param array $except
+	 * @return string
+	 */
+	public function buildQuery($except = array())
 	{
+		$obj = clone $this;
+		if($except) {
+			debug_print_backtrace();
+			print_r($except);
+			if(is_string($except)) $except = explode(",", str_replace(" ", "", $except));
+			foreach($except as $key) unset($obj->$key);
+		}
+		return http_build_query($obj);
+	}
+
+
+
+	public static function fromRequest($method = null)
+	{
+		$q = new Q();
 		$methods = func_get_args();
 		if(!$methods) $methods = array('cookie', 'post', 'get');
 
@@ -49,18 +71,10 @@ class Q
 			}
 			if(empty($var)) continue;
 			foreach($var as $key => $value)
-				if(!isset($this->$key)) $this->$key = self::clean($value);
+				if(!isset($q->$key)) $q->$key = self::clean($value);
 		}
-	}
 
-	public function __isEmpty()
-	{
-		return !(array)$this;
-	}
-
-	public static function type()
-	{
-		return strtoupper($_SERVER['REQUEST_METHOD']);
+		return $q;
 	}
 
 	public static function clean($value)
@@ -84,21 +98,21 @@ class Q
 
 	public static function get($name = null)
 	{
-		if($name === null) return new Q('get');
+		if($name === null) return Q::fromRequest('get');
 		if(isset(self::$_GET[$name])) return self::$_GET[$name];
 		return self::$_GET[$name] = isset($_GET[$name]) ? self::clean($_GET[$name]) : null;
 	}
 
 	public static function post($name = null)
 	{
-		if($name === null) return new Q('post');
+		if($name === null) return Q::fromRequest('post');
 		if(isset(self::$_POST[$name])) return self::$_POST[$name];
 		return self::$_POST[$name] = isset($_POST[$name]) ? self::clean($_POST[$name]) : null;
 	}
 
 	public static function request($name = null)
 	{
-		if($name === null) return new Q('post', 'get');
+		if($name === null) return Q::fromRequest('post', 'get');
 		if(isset(self::$_POST[$name])) return self::$_POST[$name];
 		if(isset(self::$_GET[$name])) return self::$_GET[$name];
 		self::$_POST[$name] = isset($_POST[$name]) ? self::clean($_POST[$name]) : null;
@@ -123,9 +137,9 @@ class Q
 			if($value === null) {
 				if(isset($_COOKIE[$name]) && is_array($_COOKIE[$name])) {
 					foreach(self::getArrayValues($name, $_COOKIE[$name]) as $cname => $cvalue)
-						self::setcookie($cname, null, 0, $path, $domain, $secure);
+						self::setCookie($cname, null, 0, $path, $domain, $secure);
 				} else
-					self::setcookie($name, null, 0, $path, $domain, $secure);
+					self::setCookie($name, null, 0, $path, $domain, $secure);
 			}
 			else
 				self::setCookie($name, $value, $expires, $path, $domain, $secure);
@@ -149,23 +163,4 @@ class Q
 		}
 		return $return;
 	}
-
-
-	/**
-	 * Rebuilds a query string based on this object.
-	 * You may leave out keys by specifying them in the $except array.
-	 *
-	 * @param array $except
-	 * @return string
-	 */
-	public function buildQuery($except = array())
-	{
-		$obj = clone $this;
-		if($except) {
-			if(is_string($except)) $except = explode(",", str_replace(" ", "", $except));
-			foreach($except as $key) unset($obj->$key);
-		}
-		return http_build_query($obj);
-	}
-
 }

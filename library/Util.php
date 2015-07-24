@@ -106,7 +106,7 @@ class Util {
 	 * Returns the value of static variable $class::$property
 	 */
 	public static function get_class_var($class, $property) {
-		if(!class_exists($class, true)) continue;
+		if(!class_exists($class, true)) return;
 		if(class_exists('ReflectionProperty'))
 		{
 			$x = new ReflectionProperty($class, $property);
@@ -156,7 +156,7 @@ class Util {
 
 	public static function pick($obj, $properties)
 	{
-		if(!$obj instanceof stdClass && !is_array($obj)) throw new Exception('Invalid object type!');
+		if(!($obj instanceof stdClass || is_array($obj) || $obj instanceof BaseClass)) throw new Exception('Invalid object type!');
 		if(!is_array($properties))
 		{
 			$properties = func_get_args();
@@ -170,7 +170,8 @@ class Util {
 		}
 		else
 		{
-			$new = new stdClass();
+			$type = get_class($obj);
+			$new = new $type;
 			foreach($properties as $key)
 				if(isset($obj->$key)) $new->$key = $obj->$key;
 		}
