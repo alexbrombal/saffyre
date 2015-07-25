@@ -11,6 +11,19 @@ class Saffyre {
 
 	private static $path;
 
+	public static function __init()
+	{
+		spl_autoload_register(array('Saffyre', '__autoload'), true, false);
+		Saffyre::includePath(SAFFYRE_DIR_BASE . '/core');
+		Saffyre::includePath(SAFFYRE_DIR_BASE . '/library', false);
+	}
+
+	public static function __autoload($class)
+	{
+		@include_once "$class.php";
+	}
+
+
 	/**
 	 * Adds a directory to php's include_path.
 	 *
@@ -230,3 +243,5 @@ class Saffyre {
 		else ob_flush();
 	}
 }
+
+Saffyre::__init();
