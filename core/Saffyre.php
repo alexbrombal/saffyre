@@ -16,11 +16,28 @@ class Saffyre {
 		spl_autoload_register(array('Saffyre', '__autoload'), true, false);
 		Saffyre::includePath(SAFFYRE_DIR_BASE . '/core');
 		Saffyre::includePath(SAFFYRE_DIR_BASE . '/library', false);
+		set_error_handler(array('Saffyre', '__error_handler'));
+		register_shutdown_function(array('Saffyre', '__shutdown_handler'));
+	}
+
+	static function __error_handler($errno, $errstr, $errfile, $errline, $errcontext)
+	{
+		while (ob_get_level() > 0)
+			ob_end_flush();
+		echo "$errno $errstr $errfile $errline<br/>";
+	}
+
+	static function __shutdown_handler()
+	{
+		//while (ob_get_level() > 0)
+		//	ob_end_flush();
+		print_r(error_get_last());
 	}
 
 	public static function __autoload($class)
 	{
-		@include_once "$class.php";
+		if (strpos($class, '\\') === false)
+			@include_once "$class.php";
 	}
 
 
