@@ -16,7 +16,7 @@ class BaseClass extends stdClass {
 	}
 
 	public static function create($obj) {
-		return new BaseClass($obj);
+		return new static($obj);
 	}
 
 	public function __construct($values = null, $onlyProperties = false) {
@@ -24,6 +24,8 @@ class BaseClass extends stdClass {
 	}
 
 	public function __call($name, $arguments) {}
+
+    public static function __callStatic($name, $arguments) {}
 
 	public function __isEmpty($except = "", $debug = false) {
 		$except = explode(",", str_replace(" ", "", $except));

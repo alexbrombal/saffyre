@@ -59,14 +59,14 @@ final class Controller
 		if ($fromRequest)
 		{
 			$this->uri = $_SERVER['REQUEST_URI'];
-			$this->method = $_SERVER['REQUEST_METHOD'];
+			$this->method = strtoupper($_SERVER['REQUEST_METHOD']);
 			foreach ($_SERVER as $key => $value)
 				if (strpos($key, 'HTTP_') === 0)
 					$this->headers->{strtolower(str_replace(array('HTTP_', '_'), array('', '-'), $key))} = $value;
 		}
 
 		if ($path !== null) $this->uri = $path;
-		if ($method !== null) $this->method = $method;
+		if ($method !== null) $this->method = strtoupper($method);
 		$this->get->__import($get);
 		$this->post->__import($post);
 		$this->cookie->__import($cookies);
@@ -191,7 +191,7 @@ final class Controller
 		if ($result === 1) $result = null;
 		$output = ob_get_flush();
 
-		if (!$result) {
+		if ($result === null && $output) {
 			$result = $output;
 			$this->resultWasOutput = true;
 		}
@@ -241,7 +241,7 @@ final class Controller
 
 	public static function current()
 	{
-		return self::$stack[count(self::$stack)-1];
+		return count(self::$stack) > 0 ? self::$stack[count(self::$stack)-1] : null;
 	}
 
 }

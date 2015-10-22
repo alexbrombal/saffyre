@@ -148,7 +148,8 @@ class Q extends BaseClass
 
 	private static function setCookie($name, $value, $expires, $path, $domain, $secure)
 	{
-		setcookie($name, $value, $expires === null ? null : time() + $expires, $path ? $path : '/', $usedDomain = ($domain ? $domain : '.' . (self::$cookie_domain ? self::$cookie_domain : $_SERVER['HTTP_HOST'])), $secure);
+		$domain = ($domain ? $domain : (self::$cookie_domain !== null ? self::$cookie_domain : '.' . $_SERVER['HTTP_HOST']));
+		setcookie($name, $value, $expires === null ? null : time() + $expires, $path ? $path : '/', $domain, $secure);
 	}
 
 	private static function getArrayValues($name, $array)

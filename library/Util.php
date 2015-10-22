@@ -212,4 +212,19 @@ class Util {
 		return $obj1;
 	}
 
+	public static function getClassProperties($class)
+	{
+		return array_values(
+			array_map(
+				function($p) { return $p->name; },
+				array_filter(
+					(new ReflectionClass($class))->getProperties(ReflectionProperty::IS_PUBLIC),
+					function($p) use ($class) {
+						return $p->class == $class && !$p->isStatic();
+					}
+				)
+			)
+		);
+	}
+
 }

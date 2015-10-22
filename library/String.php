@@ -78,8 +78,8 @@ class String
 		return $string;
 	}
 
-	const REGEX_EMAIL_ANY = '/(?:[a-z0-9!#$%&*+-?^_`{|}~]+|"[^"]+")@(?:[-a-z0-9]+\.)+[a-z]{2,}/ix';
-	const REGEX_EMAIL_ALL = '/^(?:[a-z0-9!#$%&*+-?^_`{|}~]+|"[^"]+")@(?:[-a-z0-9]+\.)+[a-z]{2,}$/ix';
+	const REGEX_EMAIL_ANY = '/(?:[a-z0-9!#$%&*+-?^_`{|}~]+|"[^"]+")@(?:[-a-z0-9]+\.)+[a-z]{2,}/i';
+	const REGEX_EMAIL_ALL = '/^(?:[a-z0-9!#$%&*+-?^_`{|}~]+|"[^"]+")@(?:[-a-z0-9]+\.)+[a-z]{2,}$/i';
 				
 	/**
 	 * Returns true if $email is a valid email address.
@@ -90,14 +90,15 @@ class String
 	
 	public static function isUSPhone($phone)
 	{
-		return strlen(self::formatUSPhone($phone, false, true)) == 10;
+		return strlen(self::formatUSPhone($phone, false, true)) >= 10;
 	}
 
+	const REGEX_URL = '/^((http|https):\/\/)?[a-z0-9]+([\-\.][a-z0-9]+)*\.[a-z]{2,}(\/.*)?$/i';
 	/**
 	 * Returns true if $url is a valid url
 	 */
 	public static function isURL($url) {
-		return preg_match('/^((http|https):\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$/i', $url);
+		return preg_match(self::REGEX_URL, $url);
 	}
 
 	/**
@@ -115,16 +116,18 @@ class String
 	}
 
 	/**
-	 * Formats a phone number to (xxx) xxx-xxxx if $format = 1, otherwise xxxxxxxxxx
+	 * Formats a phone number to (xxx) xxx-xxxx if $format = true, otherwise xxxxxxxxxx
 	 * If $phone is not a valid phone number, returns stripped version.
 	 */
-	public static function formatUSPhone($phone, $format = 1, $forceLength = true) {
+	public static function formatUSPhone($phone, $format = true, $forceLength = true) {
 		$stripped = preg_replace('/\D/', '', $phone);
 
-		if($format == 0)
+		if(!$format)
 			return $forceLength && strlen($stripped) < 10 ? '' : $stripped;
 
-		$formatted = preg_replace('/(\d{3})(\d{3})(\d{4})/', "($1) $2-$3", $stripped);
+		$formatted = preg_replace('/(\d{3})(\d{3})(\d{4})/', "($1) $2-$3", substr($stripped, 0, 10));
+		if (strlen($stripped) > 10)
+			$formatted .= ' ext. ' . substr($stripped, 10);
 		return ($formatted ? $formatted : $stripped);
 	}
 

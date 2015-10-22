@@ -23,17 +23,26 @@ class Encryption {
         return Crypto::createNewRandomKey();
     }
 	
-	public static function encrypt($message)
+	public static function encrypt($message, $urlSafe = false)
 	{
         if (!self::$key)
             throw new Exception('Generate and set Encryption::$key before calling Encryption::encrypt()!');
-        return Crypto::encrypt($message, self::$key);
+        $cipher = Crypto::encrypt($message, self::$key);
+        if ($urlSafe)
+            $cipher = str_replace(array('/', '+'), array('_', '-'), base64_encode($cipher));
+        return $cipher;
     }
 	
-	public static function decrypt($ciphertext)
+	public static function decrypt($ciphertext, $urlSafe = false)
 	{
         if (!self::$key)
             throw new Exception('Generate and set Encryption::$key before calling Encryption::encrypt()!');
-        return Crypto::decrypt($ciphertext, self::$key);
+        if ($urlSafe)
+            $ciphertext = base64_decode(str_replace(array('_', '-'), array('/', '+'), $ciphertext));
+        try {
+            return Crypto::decrypt($ciphertext, self::$key);
+        } catch(Exception $e) {
+            return "";
+        }
 	}
 }

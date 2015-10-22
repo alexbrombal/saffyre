@@ -22,22 +22,29 @@ class Saffyre {
 
 	static function __error_handler($errno, $errstr, $errfile, $errline, $errcontext)
 	{
-		while (ob_get_level() > 0)
-			ob_end_flush();
-		echo "$errno $errstr $errfile $errline<br/>";
+		echo "Error ($errno):<br/>\n" .
+			"<b>$errstr</b><br/>\n" .
+			"File: <b>$errfile</b> (line $errline)<br/><br/>\n\n";
 	}
 
 	static function __shutdown_handler()
 	{
-		//while (ob_get_level() > 0)
-		//	ob_end_flush();
 		print_r(error_get_last());
 	}
 
 	public static function __autoload($class)
 	{
 		if (strpos($class, '\\') === false)
-			@include_once "$class.php";
+        {
+            $oldCwd = getcwd();
+            chdir('/');
+            $file = stream_resolve_include_path("$class.php");
+            chdir($oldCwd);
+		    if (file_exists($file))
+            {
+				@include_once $file;
+            }
+        }
 	}
 
 
@@ -217,7 +224,7 @@ class Saffyre {
 		ob_start();
 
 		if (!$path)
-			$path = $_SERVER['REQUEST_URI'];
+			$path = strtok($_SERVER['REQUEST_URI'], '?');
 
 		self::$path = self::cleanPath($path);
 
@@ -242,11 +249,13 @@ class Saffyre {
 
 		if (!$controller->resultWasOutput)
 		{
-			if (is_object($response) || is_array($response))
+			if (array_filter(headers_list(), function($c) { return strpos(strtolower($c), 'content-type: application/json') === 0; }))
 			{
-				if (method_exists($response, '__toString'))
-					echo $response->__toString();
-				else
+				if ($response instanceof JsonSeriazable)
+					echo json_encode($response);
+                else if (method_exists($response, '__toJson'))
+					echo $response->__toJson();
+                else
 					echo json_encode($response);
 			}
 			else
