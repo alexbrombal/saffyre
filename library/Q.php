@@ -99,7 +99,7 @@ class Q extends BaseClass
 	public static function get($name = null)
 	{
 		if($name === null) return Q::fromRequest('get');
-		if(isset(self::$_GET[$name])) return self::$_GET[$name];
+		if(isset(self::$_GET[$name])) return self::$_GET[$name] ?: "";
 		return self::$_GET[$name] = isset($_GET[$name]) ? self::clean($_GET[$name]) : null;
 	}
 
