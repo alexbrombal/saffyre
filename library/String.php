@@ -41,7 +41,7 @@ class String
 		return $string;
 	}
 
-	public static function jsObfuscate($string)
+	public static function jsObfuscate($string, $bytesOnly = false)
 	{
 		$string = mb_convert_encoding($string, "UCS-2", mb_detect_encoding($string, array('UTF-8')));
 		
@@ -60,8 +60,9 @@ class String
 			}
 			else $str[] = $val;
 		}
-		
-		return '<script type="text/javascript">document.write(String.fromCharCode(' . implode(',', $str) . '));</script>';
+
+        $bytes = implode(',', $str);
+		return $bytesOnly ? $bytes : "<script type='text/javascript'>document.write(String.fromCharCode($bytes));</script>";
 	}
 
 	public static function trimLines($string) {
