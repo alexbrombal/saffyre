@@ -1,6 +1,6 @@
 <?php
 
-abstract class UserModel extends Model {
+abstract class UserModel extends MysqlModel {
 
 	public static $pw_salt;
 	public static $expire;

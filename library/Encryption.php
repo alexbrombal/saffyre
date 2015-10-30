@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/defuse-encryption/autoload.php';
-
 use \Defuse\Crypto\Crypto;
 use \Defuse\Crypto\Exception as Ex;
 

@@ -6,7 +6,7 @@
  * @author Alex Brombal
  * @copyright 7/20/09
  */
-abstract class Model implements dbInsertable {
+abstract class MysqlModel implements dbInsertable {
 
 	protected $id;
 	public $__error;

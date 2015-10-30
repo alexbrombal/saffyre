@@ -2,16 +2,16 @@
 
 final class Controller
 {
-	public static $ext;
-	public static $dir;
+	private static $stack = [];
 
-	private static $stack = array();
+    public static $dirs = [];
 
 	public $isMainRequest;
 
 	private $file = array();
 	private $path = array();
 	private $args = array();
+    private $dir;
 
 	private $uri;
 	private $method;
@@ -25,31 +25,57 @@ final class Controller
 	public $status;
 
 
+    public static function registerDirectory($dir, $priority = null) {
+        if ($priority === null)
+            $priority = max(array_map(function($d) { return $d['priority']; }, self::$dirs) ?: [0]) + 1;
+        $dir = rtrim($dir, DIRECTORY_SEPARATOR);
+        if (!is_dir($dir))
+            throw new Exception("Directory '$dir' is not a directory!");
+        self::$dirs[] = ['dir' => $dir, 'priority' => $priority];
+        usort(self::$dirs, function($a, $b) { return $a['priority'] - $b['priority']; });
+    }
+
+
 	public function __construct($fromRequest, $path = null, $method = null, $get = array(), $post = array(), $cookies = array(), $headers = array(), $body = null)
 	{
-		if(!self::$dir || !is_dir(self::$dir))
-			throw new Exception('Controller directory is not set or does not exist! (Use Controller::$dir = "")');
+		if(!count(self::$dirs))
+			throw new Exception('No controller directories have been registered! (Use Controller::registerDirectory(...))');
 
-		self::$dir = rtrim(self::$dir, DIRECTORY_SEPARATOR) . '/';
+        $sep = DIRECTORY_SEPARATOR;
 
 		if (is_array($path))
-			$path = '/' . Saffyre::cleanPath($path, true);
+			$path = $sep . Saffyre::cleanPath($path, true);
 
 		$this->path = Saffyre::cleanPath($path);
-		self::removeExtension($this->path);
-		if(!$this->path) $this->path = array('_default');
 
-		do {
-			$file = implode(DIRECTORY_SEPARATOR, $this->path);
-			if(is_file(self::$dir . "$file.php") && $this->file = $this->path) break;
-			if(is_file(self::$dir . $file . DIRECTORY_SEPARATOR . '_default.php') && $this->file = array_merge($this->path, array('_default'))) break;
-			array_unshift($this->args, $slug = array_pop($this->path));
-		} while($slug);
+        $max = null;
 
-		if(!$this->file) {
+        foreach (self::$dirs as $dir)
+        {
+            $info = [
+                'dir' => $dir['dir'] . $sep,
+                'args' => [],
+                'file' => $this->path
+            ];
+
+            do {
+                $file = implode($sep, $info['file']);
+                if (is_file("{$info['dir']}{$sep}{$file}{$sep}_default.php") && $info['file'][] = '_default') break;
+                if (is_file("{$info['dir']}{$sep}{$file}.php")) break;
+                array_unshift($info['args'], $slug = array_pop($info['file']));
+            } while($slug);
+
+            if (count(Util::array_clean($info['file'], '_default')) > count(Util::array_clean($max['file'], '_default')))
+                $max = $info;
+        }
+
+		if(!$max || !$max['file']) {
 			throw new Exception('Invalid controller path. Maybe you don\'t have a _default.php file.');
 		}
 
+        $this->dir = $max['dir'];
+        $this->args = $max['args'];
+        $this->file = $max['file'];
 
 		$this->get = $fromRequest ? Q::fromRequest('get') : new Q();
 		$this->post = $fromRequest ? Q::fromRequest('post') : new Q();
@@ -158,7 +184,7 @@ final class Controller
 		$args = $this->path;
 		while(true)
 		{
-			if(is_file(rtrim(self::$dir . implode(DIRECTORY_SEPARATOR, $file), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_global.php'))
+			if(is_file(rtrim($this->dir . implode(DIRECTORY_SEPARATOR, $file), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_global.php'))
 			{
 				$controller = clone $this;
 				$controller->file = array_merge($file, array('_global'));
@@ -184,10 +210,10 @@ final class Controller
 	private function doExecute()
 	{
 		array_push(self::$stack, $this);
-		chdir(dirname(self::$dir . implode(DIRECTORY_SEPARATOR, $this->file) . '.php'));
+		chdir(dirname($this->dir . implode(DIRECTORY_SEPARATOR, $this->file) . '.php'));
 
 		ob_start();
-		$result = include self::$dir . implode(DIRECTORY_SEPARATOR, $this->file) . '.php';
+		$result = include $this->dir . implode(DIRECTORY_SEPARATOR, $this->file) . '.php';
 		if ($result === 1) $result = null;
 		$output = ob_get_flush();
 
@@ -230,13 +256,6 @@ final class Controller
 		$result = $c->execute();
 		$status = $c->status;
 		return $result;
-	}
-
-	private static function removeExtension(&$args)
-	{
-		if(!self::$ext || !$args) return;
-		end($args);
-		$args[key($args)] = preg_replace('/\.('.self::$ext.')$/', '', $args[key($args)]);
 	}
 
 	public static function current()
