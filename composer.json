@@ -2,7 +2,7 @@
     "name": "alexbrombal/saffyre",
     "description": "Saffyre is a small php web framework.",
     "version": "1.0.0",
-    "keywords": "minimal framework",
+    "keywords": ["minimal", "framework"],
     "license": "MIT",
     "authors": [
         {
