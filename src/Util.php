@@ -1,6 +1,6 @@
 <?php
 
-namespace \Saffyre;
+namespace Saffyre;
 
 class Util {
 

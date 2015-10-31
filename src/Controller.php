@@ -1,6 +1,6 @@
 <?php
 
-namespace \Saffyre;
+namespace Saffyre;
 
 final class Controller
 {
@@ -67,7 +67,7 @@ final class Controller
                 array_unshift($info['args'], $slug = array_pop($info['file']));
             } while($slug);
 
-            if (count(Util::array_clean($info['file'], '_default')) > count(Util::array_clean($max['file'], '_default')))
+            if (!$max || count(Arrays::array_clean($info['file'], '_default')) > count(Arrays::array_clean($max['file'], '_default')))
                 $max = $info;
         }
 

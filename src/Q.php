@@ -1,6 +1,6 @@
 <?php
 
-namespace \Saffyre;
+namespace Saffyre;
 
 /**
  * A utility wrapper class for accessing $_GET, $_POST, and $_COOKIE data.

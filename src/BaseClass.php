@@ -1,6 +1,6 @@
 <?php
 
-namespace \Saffyre;
+namespace Saffyre;
 
 /**
  * An extended Standard Class
@@ -11,7 +11,7 @@ namespace \Saffyre;
  * @version 1.0.2
  */
 
-class BaseClass extends stdClass {
+class BaseClass extends \stdClass {
 
 	public function __get($name) {
 		return null;

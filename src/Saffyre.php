@@ -1,6 +1,6 @@
 <?php
 
-namespace \Saffyre;
+namespace Saffyre;
 
 /**
  * The main Saffyre class. This class is really just a namespace for core Saffyre methods. You cannot instantiate this class.
@@ -15,8 +15,8 @@ class Saffyre {
 
 	public static function __init()
 	{
-		set_error_handler(array('Saffyre', '__error_handler'));
-		register_shutdown_function(array('Saffyre', '__shutdown_handler'));
+		//set_error_handler(array('\Saffyre\Saffyre', '__error_handler'));
+		//register_shutdown_function(array('\Saffyre\Saffyre', '__shutdown_handler'));
 	}
 
 	static function __error_handler($errno, $errstr, $errfile, $errline, $errcontext)
@@ -29,21 +29,6 @@ class Saffyre {
 	static function __shutdown_handler()
 	{
 		print_r(error_get_last());
-	}
-
-	public static function __autoload($class)
-	{
-		if (strpos($class, '\\') === false)
-        {
-            $oldCwd = getcwd();
-            chdir('/');
-            $file = stream_resolve_include_path("$class.php");
-            chdir($oldCwd);
-		    if (file_exists($file))
-            {
-				@include_once $file;
-            }
-        }
 	}
 
 
@@ -80,7 +65,7 @@ class Saffyre {
 	{
 		if(!$path) return ($string ? '' : array());
 		if(!is_array($path)) $path = explode('/', $path);
-		$path = Util::array_clean($path);
+		$path = Arrays::array_clean($path);
 		foreach($path as $key => $item)
 			$path[$key] = urldecode($item);
 		return ($string ? implode('/', $path) : array_values($path));
