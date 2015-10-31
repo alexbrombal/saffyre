@@ -1,5 +1,7 @@
 <?php
 
+namespace \Saffyre;
+
 final class Controller
 {
 	private static $stack = [];

@@ -1,5 +1,7 @@
 <?php
 
+namespace \Saffyre;
+
 /**
  * A utility wrapper class for accessing $_GET, $_POST, and $_COOKIE data.
  * This class will clean up all effects of magic quotes if they are enabled.

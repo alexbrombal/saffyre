@@ -1,5 +1,7 @@
 <?php
 
+namespace \Saffyre;
+
 /**
  * The main Saffyre class. This class is really just a namespace for core Saffyre methods. You cannot instantiate this class.
  *
@@ -13,9 +15,6 @@ class Saffyre {
 
 	public static function __init()
 	{
-		spl_autoload_register(array('Saffyre', '__autoload'), true, false);
-		Saffyre::includePath(SAFFYRE_DIR_BASE . '/core');
-		Saffyre::includePath(SAFFYRE_DIR_BASE . '/library', false);
 		set_error_handler(array('Saffyre', '__error_handler'));
 		register_shutdown_function(array('Saffyre', '__shutdown_handler'));
 	}

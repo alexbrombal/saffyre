@@ -1,5 +1,7 @@
 <?php
 
+namespace \Saffyre;
+
 /**
  * An extended Standard Class
  *

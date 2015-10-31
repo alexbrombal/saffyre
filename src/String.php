@@ -1,5 +1,7 @@
 <?php
 
+namespace \Saffyre;
+
 /**
  * A collection of string utility functions.
  * 
